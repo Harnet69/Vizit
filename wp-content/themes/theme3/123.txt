@@ -1,0 +1,402 @@
+[12:05:43] Aliot: Создаем папку в темах WP.
+Создаем в ней файлы index.php и style.css. В файл style.css вставляем вначале:
+/*   
+Theme Name: Тема 2
+Theme URI: http://aliot.tw1.su/
+Description: краткое-описание-темы
+Author: Aliot
+Author URI: http://aliot.tw1.su/
+Version: 1.0
+*/
+и копируем style.css вёрстки.
+Копируем index.php из вёрстки index.html
+Копируем папки JS, CSS и Images
+
+Там же в корне размещаем screenshot.png или jpg. Создаем скриншотом экрана страницы вёрстки (разрешение 600x450px).
+ 
+Меняем в index.php 
+<link rel = "stylesheet" type = "text/css"; href = "<?php bloginfo('stylesheet_url'); ?>" />
+
+Подключаем прочие сss и js файлы: типа
+<link rel="stylesheet" type="text/css" href="<?php bloginfo('template_url'); ?>/css/elastislide.css" />
+
+Подключаем рисунки множественной заменой:
+images/ на <?php bloginfo('template_url');?>/images/
+
+Создаем файл header.php, переносим в него хедер и подключаем функцией <?php get_header();?>
+
+Создаем файл footer.php, переносим в него футер и подключаем функцией <?php get_footer();?>
+
+В header.php перед закрывающим тегом </head> вызовем функцию <? wp_head();?>
+
+В footer.php перед закрывающим тегом </body> вызовем функцию <? wp_footer();?>
+[12:05:56] Aliot: это предыстория к твоей шпоре
+
+
+Натяжка вёрстки на WP:
+1. Подключение панели админа вызовом функции :
+	<? wp_head();?>
+2. Подключение футера вызовом функции : 
+	<? wp_footer();?>
+3. Подключение библиотек JQuery и стилей:
+	function load_my_script(){
+		wp_enqueue_script('jquery_my', get_template_directory_uri().'/js/jquery-1.10.1.min.js');/*собственная библиотека*/
+		wp_enqueue_script('jqFancyTransitions_my', get_template_directory_uri().'/js/jqFancyTransitions.1.8.min.js');	
+		wp_enqueue_style('style_my', get_stylesheet_directory_uri().'/style.css');	
+	}
+4. Произвести загрузку скриптов по умолчанию и пользовательский скриптов 
+	add_action('wp_enqueue_script','load_my_script');
+5. Убрать статическое подключение стилей и библиотек из index.php
+6. Подключить рисунки в index.php, указав в пути вместо "images/" <? bloginfo('template_url');?>/images/
+7. Создать файл header.php и перенести в него header с файла index.php, на место него прописать : <? get_header();?>
+8. Создать файл sidebar.php и перенести в него sidebar с файла index.php  на место него прописать : <? get_sidebar();?>
+9. Создать файл footer.php и перенести в него footer с файла index.php  на место него прописать : <? get_sidebar();?>
+10. В контенте убрать одинаковые статьи, оставив только одну для шаблона.
+11. Меняем значение поля Title на <title><? bloginfo('name');?><? wp_title();?></title> 
+12. Добавляем поддержку темой виджетов и создаём сайтбар-меню : 
+	register_sidebar(array('name' => 'Меню', 'id' =>'header_menu'));
+	/*Все возможные параметры функции*/
+	$args = array(
+	'name'          => __( 'Sidebar name', 'theme_text_domain' ),
+	'id'            => 'unique-sidebar-id',
+	'description'   => '',
+        'class'         => '',
+	'before_widget' => '<li id="%1$s" class="widget %2$s">',
+	'after_widget'  => '</li>',
+	'before_title'  => '<h2 class="widgettitle">',
+	'after_title'   => '</h2>' ); 
+13. Перетаскиваем в наш виджет Меню встроенный виджет "Произвольное меню"
+14. Добавляем существующие страницы в меню.
+15. Удаляем/комментим существующее меню в header.php и прописываем там:
+		<? if(!dynamic_sidebar('header_menu')):?>
+			<span>Area menu, added at widgets</span> /*Появляется если не существует позьзовательское header_menu в function.php*/
+		<?endif;?>
+		!!! Внимание в хроме и эксплорере! Появляется точка вначале меню! Для решения проблемы в качестве агрумента функции в п.12 добавляем
+		'before_widget' => '', 'after_widget'  => ''
+16. Вывод постов в контенте : в index.php вставляем :
+		<?php if (have_posts()) :  while (have_posts()) : the_post(); ?>
+		   <!-- здесь формирование вывода постов, -->
+		   <!-- где работают теги шаблона относящиеся к the loop -->
+			!!! здесь тело поста(записи), которое будет использоваться в качетве шаблона
+		<?php endwhile; ?>
+		<?php endif; ?>
+	16.1. Добавление автор поста : вместо статического "admin" : <? the_author();?>
+	16.2. Вывод времени добавления поста : the_time('M jS, Y'); аргументы которые выводят разные форматы можно посмотеть на сайте
+	16.3. Вывод ссылки количества комментариев : comments_popup_link($zero, $one, $more, $css_class, $none)
+	16.4. Вывод названия статьи : the_title( $before, $after, $echo );/*обрамляющий тег "до", "после", вернуть запись для посл. 
+		  обработки. если заголовок ссылка, то <a href="<? the_permalink();"></a> */
+	16.5. Вывод текста в контенте записи : the_excerpt()/* по умолчанию выводит 55 слов и ставит в конце...*/	
+	16.6. Вывод в записи "read more" : <a href="<? the_permalink();?>">Read More</a>	
+	16.7. В ссылку изображения-миниатюры записи вставить ссылку на запись <a href="<? the_permalink();?>"
+	16.8. Прописать возможность добавлять миниатюры к записям из админки : 	/*ДОБАВЛЯЕТСЯ в function.php ПЕРЕД ВИДЖЕТОМ!*/
+			= Позволяет устанавливать миниатюру посту.
+				add_theme_support( 'post-thumbnails' );
+				add_theme_support( 'post-thumbnails', array( 'post' ) );          // Только для post
+				add_theme_support( 'post-thumbnails', array( 'page' ) );          // Только для page
+				add_theme_support( 'post-thumbnails', array( 'post', 'movie' ) ); // Для post и movie типов
+			= устанавливает размер миниатюры поста по умолчанию : /*crop - необходимость обрезки изображения*/
+				set_post_thumbnail_size($width, $height, $crop) 
+			= в index.php в главном цикле вывода записей вместо ссылки на стат. картинку :<img src="<?
+					bloginfo('template_url');?>/images/post-img1.jpg" alt="" /> нужно прописать проверку наличия картинки и если её нет подставлять дефолтную : 
+									<a href="<? the_permalink();?>">
+										<? if(has_post_thumbnail()):?> //проверка условия
+											<?the_post_thumbnail();?> //имеющаяся в записи миниатюра
+											<? else :?>
+												<img src="<? bloginfo('template_url');?>/images/no-image.jpg" alt='' />//"заглушка"
+											<? endif?>
+									</a>
+17. Реализация поиска :
+	17.1. Для поискового поля в index.php задать имя : name="s"		
+	17.2. Создать страницу - шаблон с именем search.php и наполнить её копией index.php с постами (записями).
+	17.3. Удаляем ненужные компоненты со страницы вывода результатов поиска.
+	17.4. В главном цикле после <?php endwhile; ?> прописАть 
+			<? else :?> 
+				<p>По вашему запросу ничего не найдено!<p>
+			<? ?> 
+18. Вывести заголовки (title) на других страницах / В header.php в title к существующему <title><? bloginfo('name');?></title> 
+		добавить wp_title(); получится  <title><? bloginfo('name');wp_title();?></title> 	
+19. Создание и настройка бокового сайтбара:
+	19.1. В functions.php добавляем : 
+			register_sidebar(array('name' => 'Sidebar',	'id' =>'sidebar'));
+		19.2. Для добавления блока картинок(баннеров-ссылок):
+			= в админке в "виджетах" перетаскиваем в свежесозданный сайдбар стандартный
+				виджет текст/произвольный текст или HTML-код. 			
+			= копируем и вставляем список (html код ul/li) прямо через админку	в поле "текст"
+			= корректируем путь к картинкам которые надо загрузить в медиатеку <li><a href="#"><img src="" alt=""/></a></li>	
+		19.3. Добавление категорий : перетаскиваем в наш виджет "Рубрики"
+		19.4. Добавление последних записей : перетаскиваем в наш виджет "Свежие записи"
+	19.5. Вывести свой сайдбар : 
+			= в header.php закомментировать всё что касается HTML сайтбара и вставить :
+				<? if(!dynamic_sidebar('sidebar')):?>
+					<span>This is area for sidebar, added at widgets</span>
+				<?endif;?>
+			= 	подключаем стили для сайдбара, добавляя к п. 19.1 бифоре и афтер
+					register_sidebar(array('name' => 'Sidebar',
+							'id' =>'sidebar',
+							'before_widget' => '<div class="sidebar-categories %2$s">',// класс стилей для виджетов этого сайтбара
+							'after_widget'  => '</div>',
+							'before_title'  => '<h2>',
+							'after_title'   => '</h2>'));
+			= для того чтобы при установке темы на "чистый" вордпресс без категорий и прочего, оформляем "заглушку"	<span>This is area
+				for sidebar, added at widgets</span> из п.19.5.п1 классом стандартного сайдбара : 
+					<div class="sidebar-categories">			
+						<h2>This is area for sidebar</h2>
+					</div>
+20. Создание и настройка cайтбара футера:					
+	20.1. В function.php зарегистрировать сайтбар футера с классом "footer-info" наших повторяющахся блоков в нём :
+			register_sidebar(array('name' => 'Footer',
+							'id' =>'footer',
+							'before_widget' => '<div class="footer-info">',
+							'after_widget'  => '</div>',
+							'before_title'  => '<h2>',
+							'after_title'   => '</h2>'));
+	20.2. В админке в виджетах добавляем в появившийся виджет Footer два текстовых поля и произвольное меню
+		= в текстовые поля переносим заголовки и параграфы из footer.php
+		= в произвольном меню назначаем заголовок
+	20.3. В файле footer.php комментируем весь HTML код касающийся виджетов и вместо него вписываем:
+			<?if(!dynamic_sidebar('footer')):?>
+				<div class="footer-info">			
+					<h3>This is area for footer</h3>
+				</div>
+				<div class="footer-info">			
+					<h3>This is area for footer</h3>
+				</div>
+				<div class="footer-info">			
+					<h3>This is area for footer</h3>
+				</div>
+			<?endif;?>
+	20.4. Для формирования вертикального меню вместо горизонтального создаём свойства для элементов списка li класса footer-main :
+			.footer-main li {
+				float:none;
+			} и меняем тоже line-height
+21. Постраничная навигация (пагинатор):
+	21.1. Закомментировать HTML код пагинатора в index.php
+		= вставляем в function.php : 
+			function my_pagenavi() {
+				global $wp_query;
+				$big = 999999999; // уникальное число для замены
+
+				$args = array(
+					'base' => str_replace( $big, '%#%', get_pagenum_link( $big ) )
+					,'format' => ''
+					,'current' => max( 1, get_query_var('paged') )
+					,'total' => $wp_query->max_num_pages
+					,'current' => 1
+				);
+
+				$result = paginate_links( $args );
+
+				// удаляем добавку к пагинации для первой страницы
+				$result = str_replace( '/page/1/', '', $result );
+
+				echo $result;
+			}	
+		= вызываем в index.php : 
+				<? my_pagenavi();?>
+22. Создание своего шаблона записи(если его не создавать то берётся шаблон индексной):
+	22.1. Создать страницу с именем single.php - это шаблон записи(поста)
+	22.2. Наполнить её кодом (если нет спец. макета - кодом с index.php)
+	22.3. Убрать ненужные блоки (баннеры, пагинатор, read more, комментарии, миниатюры, убрать ссылку с названия статьи (title))
+	22.4. Вместо функции цитаты the_excerpt() основного контента прописать вывод всего контента the_content();  
+	22.5. Вставить ссылки на предыдущие/следующие записи в "обёртке" от пагинатора :
+		<? previous_post_link('<span>&laquo;</span> %link');next_post_link('%link <span>&raquo;</span>');?>/*ссылки-заголовки тем с кавычками*/
+23. Создание своего шаблона записи производится аналогично, неоходимо только удалить автора и комментарии.	
+24. Подключение комментариев :
+		= на странице single.php вызвать функцию показа/добавления	comments_template();
+		= копируем файл comments.php из любой темы
+		= запускаем страницу comments.php и вставляем недостающие функции в свои functions.php из аналогичного файла темы из которой мы "дёрнули" комменты
+		= в файербаге сморим в coments.php какие CSS используются и копируем их из аналогичного файла темы-донора
+		= правим файлы coments.php и functions.php под свои задачи (переводы, изменение вывода даты и времени комментария get_comment_time)
+25. Изменение стилей вывода элементов записей(постов)/напр обтекания текстом картинок
+	= смотрим в файербаге какие классы присваиваются картинке/абзацу и любому элементу в записи (слева в коде!) и копируем свойства этого класса из любой темы
+26. Создание шаблона не существующей страницы 404 (Not found):
+	= создать файл с именем 404.php/скопировать с single.php	
+	= убрать у неё всё с контента, кроме заголовка/title
+		!!! на некоторых серверах НЕ работает со страницами с буквенными названиями, только с вида http://test/?page%20id=300. Для них 
+			= создаём страницу с именеи .htaccess в корне сайта, не в папке с темой
+			= делаем в ней запись ErrorDocument 404 /index.php?error=404 
+27. Баннер можно реализовать добавив в свой виджет встроенный виджет "произвольное поле", куда нужно вставлять HTML код, но
+	если надо из админки добавлять свои картинки. В админке появляются пункты и подпункты.
+	27.1. Вставляем код в functions.php
+		register_post_type()/!!!создаёт новый или меняет тип записи	в админке!!!
+		function my_custom_init()
+			{
+			  $labels = array(
+				'name' => 'Книги', // Основное название типа записи
+				'singular_name' => 'Книга', // отдельное название записи типа Book
+				'add_new' => 'Добавить новую',
+				'add_new_item' => 'Добавить новую книгу',
+				'edit_item' => 'Редактировать книгу',
+				'new_item' => 'Новая книга',
+				'view_item' => 'Посмотреть книгу',
+				'search_items' => 'Найти книгу',
+				'not_found' =>  'Книг не найдено',
+				'not_found_in_trash' => 'В корзине книг не найдено',
+				'parent_item_colon' => '',
+				'menu_name' => 'Книги'
+				);
+			  $args = array( /*это массив параметров*/
+				'labels' => $labels,
+				'public' => true,
+				'publicly_queryable' => true,
+				'show_ui' => true,
+				'show_in_menu' => true,
+				'query_var' => true,
+				'rewrite' => true,
+				'capability_type' => 'post',
+				'has_archive' => true,
+				'hierarchical' => false,
+				'menu_position' => null,
+				'supports' => array('title','editor','author','thumbnail','excerpt','comments')
+				);
+			  register_post_type('book',$args);
+			}
+		= правим значения параметров под свои нужды (name и прочие)
+		= в 'supports' выбираем те поля которые нам нужны (напр. для баннера нужен только заголовок и миниатюра /title и thumbnail)
+		= инициализируем здесь-же, в functions.php свежесозданный новый тип записи add_action('init','book')/*init - инициализания, book - имя функции/новой записи */;	
+		= в админке появляются пункты добавления	
+		= вывод свежесозданных записей при помощи WP_Query - класса, который реализует выборку постов из базы данных по указанным критериям
+			!!! главный цикл на index.php выводит только стандартные записи? поэтому нужно сделать свой собственный цикл вывода
+	27.2. В файл вывода (для банера это header.php), вместо статического вывода HTML создаём экземпляр класса WP_Query и передаём в качестве 
+		аргумета массив параметров()
+			$banner = new WP_Query(array('post_type'=>'book', 'posts_per_page'=>1)); где book - имя проинициализированной созданной записи add_action('init','book'), а  'posts_per_page'=>1 - количество записей на странице
+	28.3. Вывод данных при помощи стандартного цикла, но нужно указывать какие методы объекта мы вызываем (например $banner->have_posts())
+			<?php if ($banner->have_posts()) :  while ($banner->have_posts()) : $banner->the_post(); ?>
+				<?the_post_thumbnail();?>  /*Вызов миниатюры*/
+			<?php endwhile; ?>
+			<? else: echo "<p>Место для баннера разм. 728х90px</p>";?>/*Если нет баннера*/
+			<?php endif; ?>
+	28.4. Количество выводимых записей 'posts_per_page'=>1 указывается при создании экз. класса в пункте 27.2. 
+
+Вторая тема :
+	- подключение стилей на index.php к файлу style.css функцией bloginfo('stylesheet_url')
+		<link rel="stylesheet" type="text/css" href="<? bloginfo('stylesheet_url');?>" />
+	- прописываем путь к нашим изображениям в папке Images/ 
+		<? bloginfo('template_url');?>/Images/	
+	- создание меню другим способом (не произвольное меню в сайдбаре)
+		= в function.php создаём запись register_nav_menu ('имя','описание')
+		= в появившейся закладке в админке создаём меню и наполняем его
+		= в файле header.php вызываем его в нужном месте функцией wp_nav_menu(array('theme_location'=>'имя меню указанное в functions.php'));
+			Возможные параметры
+			wp_nav_menu( array(
+					'theme_location'  => '',
+					'menu'            => '', 
+					'container'       => 'div', 
+					'container_class' => '', 
+					'container_id'    => '',
+					'menu_class'      => 'menu', 
+					'menu_id'         => '',
+					'echo'            => true,
+					'fallback_cb'     => 'wp_page_menu',
+					'before'          => '',
+					'after'           => '',
+					'link_before'     => '',
+					'link_after'      => '',
+					'items_wrap'      => '<ul id="%1$s" class="%2$s">%3$s</ul>',
+					'depth'           => 0
+				) );
+			!!! при создании меню формируется лишний div, убираем его  из 'container' => 'div'
+	- карусель
+		= регистрируем в functions.php возможность работы с виджетами:
+				register_sidebar(array('name' => 'slider_main',
+								'id' =>'slider_index',
+								'description' => 'Слайдер на главной',
+								'before_widget' => '',
+								'after_widget'  => '',
+								'before_title'  => '',
+								'after_title'   => ''));
+		= через админку	в созданный виджет перетаскиваем виджет "текст" и переносим туда html текст					
+		= 	в index.php вызываем сайдбар
+					<? if(!dynamic_sidebar('slider_index')) : ?>
+					<ul id="carousel" class="elastislide-list">
+						<li>Это место для карусели!</li>
+					</ul>	
+					
+Шаблон для страницы записи
+	1.Создать файл шаблона и назвать его «single-slug.php» или «single-id.php» slug и id это ярлык и идентификатор поста;
+	2.Сделать копию файла «single.php» и назвать её, к примеру, «single-default.php» тем самым мы разграничим все посты по шаблонам для удобства.
+	3.Открыть файл «single.php», удалить все содержимое и вставить следующий код:
+	<?php
+	  $post = $wp_query->post;
+	  if (in_category('portfolio')) { //slug  категории
+		  include(TEMPLATEPATH.'/single-portfolio.php');
+	  } else {
+		  include(TEMPLATEPATH.'/single-default.php');
+	  }
+	?>
+Галерея - переделка стандартной
+	- создаём на странице/записи стандартную галерею (НЕ трогаем её имя!)
+	- в functions.php создаём функцию ( даём шорткоду своё имя (например short_galery)) :
+		function short_galery($attr, $text='')/*$attr - массив атрибутов в который приходят id картинок, $text - пустая строка */
+		{}
+	- "привязываем" созданную функцию к стандартной :
+		add_shortcode('shortcode_gallery', 'short_galery')/*shortcode_gallery - имя стандартной галлереи, short_galery - имя своей функции*/
+	- 	$attr - массив атрибутов в который приходят id картинок приходит в строке, поэтому разбиваем его в массив :	
+		$imge = explode(',', $attr['ids']);/*сейчас в каждом $imge[] - лежит id картинки*/
+		echo wp_get_attachment_image( $imge[0], 'medium' );// выводит картинку с id который находится здесь - $imge[0]	
+	- регулярные выражения позволяют вырезать из кода ненужный кусок используется программа RegExr
+	
+		function mygallery($attr, $text = ''){
+		$imge = explode(',', $attr['ids']);
+		$pattern = '#(width|height)="\d+"#';/*Регулярное выражение*/
+		$result = '<ul id="slide_2" class="slidik">';
+		foreach ($imge as $item){
+			$image_url = wp_get_attachment_image( $item, 'full');
+			$image_url = preg_replace($pattern, '',$image_url);
+			$result .= '<li>'.$image_url.'<li>';		
+		}
+		$result.= '<a data-slidik="slide_2" class="next" href="#">Next</a>
+				<a data-slidik="slide_2" class="prev" href="#">Prev</a>
+				<div class="captionWrap"><div data-slidik="slide_2" class="caption"></div></div>
+				<a href="portfolio.html" class="portfolio-close"></a>
+			</ul>';
+		echo $result;		
+	}
+	add_shortcode( "gallery","mygallery");
+Вывод произвольных полей:
+	- создаём произвольное поле в записи и заполняем его
+	- функция вывода значения произвольного поля - get_post_custom();/*получает все данные о произвольных полях текущего поста.*/
+		Вместо этой функции можно использовать get_post_meta( $post_id ). Разница между ними в том, что get_post_meta() нужно передавать ID записи, а get_post_custom() получит ID текущей записи автоматически, если не передать ID.
+		<? $custom_fields = get_post_custom();?>
+			<?if (!empty($custom_fields['place'][0])){
+				echo "<p class='exhib-place'>".$custom_fields['place'][0]."<p>";}
+			?>
+Шаблоны для разных категорий/рубрик	можно запихать в один category.php и выводить их через if, имена категории, которой принадлежит эта запись	
+	можно брать функцией $category = get_the_category(); и вывести в условии if методом $category[0]->cat_name;
+	
+Создать собственную страницу своей темы в админке 
+		http://oddstyle.ru/wordpress-2/stati-wordpress/sozdanie-stranicy-nastroek-dlya-wordpress-temy.html
+	/*вставка страницы собственной темы*/
+		function setup_theme_admin_menus() {
+			add_submenu_page('themes.php',
+				'Front Page Elements', 'Настройки моей темы', 'manage_options',
+				'front-page-elements', 'theme_front_page_settings');
+		}  
+
+		add_action("admin_menu", "setup_theme_admin_menus"); 
+
+		function theme_front_page_settings() {
+			echo "Hello, world!";
+		}  
+Подключение шаблонов для конкретных страниц :
+	- создать страницу с именем шаблона (например contacts.php)
+	- в ней создать запись :
+		<?
+			/*
+			Template Name: Шаблон страницы контактов
+			*/
+		?> 
+	- в админке редактирования страницы появилась возможность выбора шаблона (базовый - page.php)	
+При конфликте разных версий библиотек JQuery нужно создавать защищённое соединение:
+	function load_my_script(){
+		wp_enqueue_script('jquery_my', 'http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js');	
+	}
+	add_action('wp_enqueue_script','load_my_script');
+Если вёрстка "едет" при выводе <div> (например когда в ряд должно выводиться только 3 шт.)после последнего использовать параметр clear:both;
+	<? $i=0;?>
+	<? if($i==3){
+		echo "<div class='clear'></div>";
+		$i=1;
+	}?>				
+
+	
