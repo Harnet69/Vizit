@@ -388,15 +388,54 @@ images/ на <?php bloginfo('template_url');?>/images/
 		?> 
 	- в админке редактирования страницы появилась возможность выбора шаблона (базовый - page.php)	
 При конфликте разных версий библиотек JQuery нужно создавать защищённое соединение:
-	function load_my_script(){
-		wp_enqueue_script('jquery_my', 'http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js');	
-	}
-	add_action('wp_enqueue_script','load_my_script');
+function load_style_script(){
+	wp_enqueue_style('mystyle', get_stylesheet_directory_uri() . '/style.css');
+	wp_enqueue_script('demo', get_template_directory_uri() . '/js/demo.js');
+	wp_enqueue_script('jquery-ui-1.9.2', get_template_directory_uri() . '/js/jquery-ui-1.9.2.custom.js');
+}
+
+add_action('wp_enqueue_scripts', 'load_style_script');
 Если вёрстка "едет" при выводе <div> (например когда в ряд должно выводиться только 3 шт.)после последнего использовать параметр clear:both;
 	<? $i=0;?>
 	<? if($i==3){
 		echo "<div class='clear'></div>";
 		$i=1;
-	}?>				
+	}?>		
+<? bloginfo('admin_email')?> - вставляет в код адрес эл. почты администратора сайта из общих настроек WP
+Добавление в админку собственной вкладки :
+	- в файле functions.php создаём собственную функцию, которая добавит нашу вкладку в произвольно выбранное поле админки :
+		function my_options(){
+			add_setting_field( /*создание поля опций, написание : add_settings_field( $id, $title, $callback, $page);*/
+				'tel', /*id поля */
+				'Контактный телефон', /*title заголовок поля, который выводится в админке*/ 	
+				'show_phone', /*имя Callback функции*/
+				'general', /* page страница/вкладка в админке на которой наше поле будет размещено. Смотреть адрес наведя мышкой на поле*/
+			);
+			register_setting( /*написание : register_setting( $option_group, $option_name, $sanitize_callback );*/
+				'general',/*$option_group куда мы помещаем свою вкладку*/
+				'my_tel',/*$option_name название нашего поля под которым оно будет сохраняться в БД */
+			);/*регистрация новой опции и callback функции обратного вызова для обработки её значения при сохранении её в БД*/
+		}
+	- "привязка" функции my_options к хуку запуска admin_init, который срабатывает до загрузки админки
+		add_action ('admin_init', 'my_options');
+	- описать callback функцию:
+		function show_phone(){
+			echo "<input type='text' name='my_tel' value=''>";
+		}	
+	Итого :
+		/*создание собственной вкладки в админке*/
+			function my_options(){
+				add_settings_field('tel', 'Мой номер телефона','show_phone','general');
+				register_setting('general','my_tel');
+			}
+			add_action ('admin_init', 'my_options');
 
+					function show_phone(){
+						echo "<input class='regular-text' type='text' name='my_tel' value=''>";
+					}	
+		Значение поля видно в базе WP в таблице wp_options				
+	- вывод значения в окошке ввода - в функции callback (в нашем случае show_phone()) в value вызвать функцию:
+		get_option('my_tel'); /*!!!!!!!!!!! ОБЯЗАТЕЛЬНО КОНКАТЕНАЦИЕЙ!*/
+		для того чтобы выводились спецсимволы типа '", её нужно обернуть в esc_attr(get_option('my_tel'));/* функция заменяет их на сущности*/
+<?= home_url();?> - размещённая в ссылке перемещает на главную страницу
 	
